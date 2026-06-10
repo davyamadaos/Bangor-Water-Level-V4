@@ -86,9 +86,20 @@ td,th{
  border-bottom:1px solid #ddd;
 }
 
-canvas{
- max-height:500px;
+.chart-container{
+ height:650px;
+ position:relative;
 }
+
+@media(max-width:768px){
+ .chart-container{
+  height:500px;
+ }
+}
+ <div class="chart-container">
+  <canvas id="chart"></canvas>
+</div>
+
 
 #sparkline{
  font-size:.7rem;
