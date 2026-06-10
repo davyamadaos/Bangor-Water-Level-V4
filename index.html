@@ -126,7 +126,7 @@ td,th{
 
 <div id="rate"></div>
 
-<div id="sparkline"></div>
+
 
 </div>
 
@@ -268,24 +268,7 @@ function getOffset(){
  return parseFloat(offsetInput.value||0);
 }
 
-function spark(values){
 
- const chars='▁▂▃▄▅▆▇█';
-
- const min=Math.min(...values);
- const max=Math.max(...values);
-
- return values.map(v=>{
-
-  const idx=Math.round(
-   ((v-min)/(max-min||1))*7
-  );
-
-  return chars[idx];
-
- }).join('');
-
-}
 
 function setRange(r){
 
@@ -381,8 +364,7 @@ function render(){
  )
  .map(r=>r.absolute+offset);
 
- document.getElementById('sparkline').textContent=
- spark(values24.slice(-24));
+ 
 
  const high=Math.max(...values24);
  const low=Math.min(...values24);
