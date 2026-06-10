@@ -86,27 +86,15 @@ td,th{
  border-bottom:1px solid #ddd;
 }
 
-.chart-container{
- height:650px;
- position:relative;
+
+ <canvas id="chart"></canvas>
+ 
+ canvas{
+ max-height:450px;
 }
 
-@media(max-width:768px){
- .chart-container{
-  height:500px;
- }
-}
- <div class="chart-container">
-  <canvas id="chart"></canvas>
-</div>
 
 
-#sparkline{
- font-size:.7rem;
- white-space:nowrap;
- overflow:hidden;
- max-width:180px;
-}
 
 </style>
 </head>
@@ -138,13 +126,27 @@ td,th{
 
 </div>
 
-<p><strong>Latest Observation:</strong> <span id="updated"></span></p>
+<p>
+<strong>Last EPA Observation:</strong><br>
+<span id="updated"></span>
+</p>
 
-<p><strong>Data Age:</strong> <span id="dataAge"></span></p>
+<p>
+<strong>Observation Age:</strong><br>
+<span id="dataAge"></span>
+</p>
 
-<p><strong>Dashboard Sync:</strong> <span id="syncTime"></span></p>
+<p>
+<strong>Estimated Current Level:</strong><br>
+<span id="forecastValue"></span>
+</p>
 
-<p><strong>Forecast Now:</strong> <span id="forecastValue"></span></p>
+<p>
+<strong>Dashboard Refreshed:</strong><br>
+<span id="syncTime"></span>
+</p>
+
+
 
 </div>
 
@@ -315,11 +317,27 @@ function render(){
 
  const latestTime=new Date(latest.timestamp);
 
- const delta=
- latest.absolute-previous.absolute;
+ const recent=allData.slice(-8);
 
- const mmPerHr=
- delta*1000*4;
+const firstRecent=recent[0];
+const lastRecent=recent[recent.length-1];
+
+const hours=
+ (
+  new Date(lastRecent.timestamp)
+  -
+  new Date(firstRecent.timestamp)
+ )/3600000;
+
+const mmPerHr=
+ (
+  (lastRecent.absolute-firstRecent.absolute)
+  /
+  hours
+ )*1000;
+ 
+
+  
 
  const ageHours=
  (new Date()-latestTime)/3600000;
@@ -425,12 +443,11 @@ function render(){
   forecast+offset
  ];
 
- if(chart) chart.destroy();
-
- chart=new Chart(
+ if(chart) chart=new Chart(
  document.getElementById('chart'),
  {
   type:'line',
+
   data:{
    labels,
    datasets:[
@@ -446,11 +463,100 @@ function render(){
     tension:0.2
    }
    ]
+  },
+
+  plugins:[{
+
+   id:'valueLabels',
+
+   afterDatasetsDraw(chart){
+
+    const ctx=chart.ctx;
+
+    chart.data.datasets.forEach((dataset,index)=>{
+
+     const meta=chart.getDatasetMeta(index);
+
+     if(!meta.data.length) return;
+
+     const point=
+      meta.data[meta.data.length-1];
+
+     const value=
+      dataset.data[dataset.data.length-1];
+
+     if(value==null) return;
+
+     ctx.save();
+
+     ctx.font='bold 12px sans-serif';
+
+     ctx.fillStyle='#000';
+
+     ctx.fillText(
+      Number(value).toFixed(3)+' m',
+      point.x+10,
+      point.y-10
+     );
+
+     ctx.restore();
+
+    });
+
+   }
+
+  }],
+
+  options:{
+   responsive:true,
+   maintainAspectRatio:false,
+
+   plugins:{
+    legend:{display:true},
+    tooltip:{enabled:true}
+   },
+
+   scales:{
+    x:{display:true}
+   }
   }
  });
 
-}
+<div class="card">
 
+<h3>Level Summary</h3>
+
+<table>
+
+<tr>
+<th>Time</th>
+<th>Level</th>
+</tr>
+
+<tr>
+<td>6h ago</td>
+<td id="level6h"></td>
+</tr>
+
+<tr>
+<td>3h ago</td>
+<td id="level3h"></td>
+</tr>
+
+<tr>
+<td>Latest observation</td>
+<td id="levelNow"></td>
+</tr>
+
+<tr>
+<td>Estimated now</td>
+<td id="levelForecast"></td>
+</tr>
+
+</table>
+
+</div>
+ 
 loadData();
 
 setRange('24h');
